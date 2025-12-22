@@ -1,0 +1,24 @@
+# Node dependencies
+node_modules/
+
+# Caches
+.cache/
+node_modules/.cache/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output (add/remove depending on your stack)
+dist/
+build/

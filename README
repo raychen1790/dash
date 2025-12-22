@@ -1,0 +1,32 @@
+# Space Missions Dashboard
+
+An interactive dashboard for visualizing and analyzing historical space mission data from 1957 onwards.
+
+## Installation
+```bash
+npm install
+npm start
+```
+
+## Visualization Choices
+
+### 1. Line Chart - Missions Over Time
+**Why this visualization:** Line charts excel at showing trends and patterns over continuous time periods. For space mission data spanning decades, this allows users to immediately identify:
+- Peak periods of space race activity (1960s-1980s)
+- Decline periods after the Cold War
+- Modern resurgence in commercial space activity
+- Long-term trajectory of space exploration
+
+**Why this method:** The continuous line emphasizes the temporal flow and makes year-over-year changes visually intuitive.
+
+### 2. Horizontal Bar Chart - Top 10 Companies by Mission Count
+**Why this visualization:** Bar charts are ideal for comparing discrete quantities across categories. Ranking companies by mission count answers the key question: "Who are the major players in space exploration?"
+
+**Why this method:** Horizontal orientation accommodates long organization names (e.g., "RVSN USSR", "China Aerospace Science and Technology Corporation") without rotation or truncation. The ordered ranking makes it easy to identify leaders and compare relative activity levels at a glance.
+
+### 3. Pie Chart - Mission Status Distribution
+**Why this visualization:** Pie charts effectively show part-to-whole relationships. For mission outcomes, users want to understand: "What proportion of missions succeed vs fail?"
+
+**Why this method:** The circular format provides an immediate visual sense of overall reliability. Color coding (green for success, red for failure) adds intuitive meaning. This is more effective than raw percentages for conveying the "big picture" of mission success rates.
+
+All 8 required functions are implemented and exposed via `window` object after CSV upload:
