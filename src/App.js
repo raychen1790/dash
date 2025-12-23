@@ -10,6 +10,8 @@ const SpaceMissionsDashboard = () => {
     endDate: ''
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [currPage, setCurrPage] = useState(1);
+  const itemsPerPg = 100;
 
   const parseCSV = (text) => {
     const lines = text.trim().split('\n');
@@ -67,17 +69,17 @@ const SpaceMissionsDashboard = () => {
         const text = await file.text();
         const data = parseCSV(text);
         if (data.length === 0) {
-          alert('No data found in file. Please check the file format.');
+          alert('No data found in file.');
           return;
         }
         console.log(`Loaded ${data.length} missions`);
         console.log('Sample data:', data[0]);
         console.log('Column names:', Object.keys(data[0]));
-        console.log('First mission status value:', data[0].MissionStatus);
+        console.log('1st mission status value:', data[0].MissionStatus);
         setCsvData(data);
       } catch (err) {
         console.error('Error loading file:', err);
-        alert('Error loading file. Please ensure it is a valid CSV file.');
+        alert('Error loading file. Please make sure its a valid CSV file.');
       }
     }
   };
@@ -294,6 +296,12 @@ const SpaceMissionsDashboard = () => {
     return sorted;
   }, [filteredData, sortConfig]);
 
+  const totalPgs = Math.ceil(sortedData.length / itemsPerPg);
+  const paginatedData = useMemo(() => {
+    const startIdx = (currPage - 1) * itemsPerPg;
+    return sortedData.slice(startIdx, startIdx + itemsPerPg);
+  }, [sortedData, currPage]);
+
   const stats = useMemo(() => {
     if (!filteredData.length) return {};
     const successCount = filteredData.filter(m => m.MissionStatus === 'Success').length;
@@ -303,20 +311,18 @@ const SpaceMissionsDashboard = () => {
     };
   }, [filteredData]);
 
-  // missions by yr line
   const missionsByYear = useMemo(() => {
-  if (!filteredData.length) return [];
-  const years = {};
-  filteredData.forEach(m => {
-    if (m.Date) {
-      const yr = m.Date.substring(0, 4);
-      years[yr] = (years[yr] || 0) + 1;
-    }
-  });
-  return Object.entries(years).map(([yr, cnt]) => ({ year: yr, missions: cnt })).sort((a, b) => a.year.localeCompare(b.year));
-}, [filteredData]);
+    if (!filteredData.length) return [];
+    const years = {};
+    filteredData.forEach(m => {
+      if (m.Date) {
+        const yr = m.Date.substring(0, 4);
+        years[yr] = (years[yr] || 0) + 1;
+      }
+    });
+    return Object.entries(years).map(([yr, cnt]) => ({ year: yr, missions: cnt })).sort((a, b) => a.year.localeCompare(b.year));
+  }, [filteredData]);
 
-  // top 10 bar
   const topCompanies = useMemo(() => {
     if (!filteredData.length) return [];
     const counts = {};
@@ -329,7 +335,6 @@ const SpaceMissionsDashboard = () => {
       .map(([comp, cnt]) => ({ company: comp, missions: cnt }));
   }, [filteredData]);
 
-  // status pie
   const statusData = useMemo(() => {
     if (!filteredData.length) return [];
     const counts = {};
@@ -339,13 +344,14 @@ const SpaceMissionsDashboard = () => {
     return Object.entries(counts).map(([status, cnt]) => ({ name: status, value: cnt }));
   }, [filteredData]);
 
-  const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'];
+  const COLORS = ['#6fe6beff', '#d62e2eff', '#eab55aff', '#8c6bdaff'];
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
+    setCurrPage(1);
   };
 
   if (!csvData) {
@@ -369,7 +375,6 @@ const SpaceMissionsDashboard = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Space Missions Dashboard</h1>
       
-      {/* summ */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-white p-4 rounded shadow">
           <div className="text-gray-600 text-sm">Total Missions</div>
@@ -381,7 +386,6 @@ const SpaceMissionsDashboard = () => {
         </div>
       </div>
 
-      {/* filters */}
       <div className="bg-white p-4 rounded shadow mb-4">
         <h2 className="font-bold mb-3">Filters</h2>
         <div className="grid grid-cols-4 gap-3">
@@ -423,12 +427,10 @@ const SpaceMissionsDashboard = () => {
         </div>
       </div>
 
-      {/* visuals */}
       <div className="grid grid-cols-1 gap-4 mb-4">
-        {/* line */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-bold mb-2">Missions Over Time</h2>
-          <p className="text-sm text-gray-600 mb-3">Shows the trend of space missions launched each year. This line chart helps identify peak periods of space activity and long-term trends in launch frequency.</p>
+          <p className="text-sm text-gray-600 mb-3">Shows the number of space missions launched each year. We can see peak periods of space activity and trends in launch frequency.</p>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={missionsByYear}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -440,30 +442,28 @@ const SpaceMissionsDashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* bar */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-bold mb-2">Top 10 Companies by Mission Count</h2>
-          <p className="text-sm text-gray-600 mb-3">Compares mission counts across the most active space organizations. This horizontal bar chart makes it easy to see which companies dominate space exploration.</p>
+          <p className="text-sm text-gray-600 mb-3">Compares mission counts across the top space organizations.</p>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={topCompanies} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="company" type="category" width={120} />
               <Tooltip />
-              <Bar dataKey="missions" fill="#8b5cf6" />
+              <Bar dataKey="missions" fill="#936befff" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* pie */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-bold mb-2">Mission Status Distribution</h2>
-          <p className="text-sm text-gray-600 mb-3">Shows the proportion of successful vs failed missions. This pie chart provides a quick visual understanding of overall mission reliability.</p>
+          <p className="text-sm text-gray-600 mb-3">Shows the proportion of successful vs failed missions.</p>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
+              <Pie data={statusData} cx="50%" cy="50%" outerRadius={100} fill="#4c44dfff" dataKey="value" label>
                 {statusData.map((entry, idx) => (
-                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                  <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -473,7 +473,6 @@ const SpaceMissionsDashboard = () => {
         </div>
       </div>
 
-      {/* table */}
       <div className="bg-white p-4 rounded shadow">
         <h2 className="font-bold mb-3">Mission Data ({sortedData.length} missions)</h2>
         <div className="overflow-x-auto">
@@ -489,7 +488,7 @@ const SpaceMissionsDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedData.slice(0, 100).map((m, idx) => (
+              {paginatedData.map((m, idx) => (
                 <tr key={idx} className="border-b hover:bg-gray-50">
                   <td className="p-2">{m.Company}</td>
                   <td className="p-2">{m.Date}</td>
@@ -509,8 +508,31 @@ const SpaceMissionsDashboard = () => {
               ))}
             </tbody>
           </table>
-          {sortedData.length > 100 && (
-            <p className="text-gray-500 text-sm mt-2">Showing first 100 of {sortedData.length} missions</p>
+          {totalPgs > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-600">
+                Showing {((currPage - 1) * itemsPerPg) + 1}-{Math.min(currPage * itemsPerPg, sortedData.length)} of {sortedData.length} missions
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrPage(p => Math.max(1, p - 1))}
+                  disabled={currPage === 1}
+                  className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Previous
+                </button>
+                <span className="px-3 py-1">
+                  Page {currPage} of {totalPgs}
+                </span>
+                <button
+                  onClick={() => setCurrPage(p => Math.min(totalPgs, p + 1))}
+                  disabled={currPage === totalPgs}
+                  className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
