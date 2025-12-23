@@ -9,6 +9,8 @@ npm install
 npm start
 ```
 
+You can use the space_missions.csv in the public folder.
+
 Visualization Choices
 1. Line Chart – Missions Over Time
 Why this visualization:
